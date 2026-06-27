@@ -1,0 +1,69 @@
+import type { NextFunction, Request, Response } from 'express';
+import { AppError } from '../../../shared/errors/app-error.js';
+import type { AuthenticatedRequest } from '../../../shared/types/express.js';
+import { restaurantService } from '../services/restaurant.service.js';
+import { createRestaurantSchema, updateRestaurantSchema } from '../validators/restaurant.validators.js';
+
+export const restaurantController = {
+  async create(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw AppError.unauthorized();
+      const data = createRestaurantSchema.parse(req.body);
+      const restaurant = await restaurantService.create(req.user.id, data);
+      res.status(201).json({ data: restaurant });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async list(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const page = Math.max(1, Number(req.query['page']) || 1);
+      const limit = Math.min(50, Math.max(1, Number(req.query['limit']) || 20));
+      const { docs, total } = await restaurantService.list(page, limit);
+      res.status(200).json({ data: docs, meta: { page, limit, total } });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getById(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const restaurant = await restaurantService.getById(req.params['id']!);
+      res.status(200).json({ data: restaurant });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getOwn(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw AppError.unauthorized();
+      const restaurant = await restaurantService.getByOwner(req.user.id);
+      res.status(200).json({ data: restaurant });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async update(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw AppError.unauthorized();
+      const data = updateRestaurantSchema.parse(req.body);
+      const restaurant = await restaurantService.update(req.params['id']!, req.user.id, data);
+      res.status(200).json({ data: restaurant });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) throw AppError.unauthorized();
+      await restaurantService.delete(req.params['id']!, req.user.id);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+};
