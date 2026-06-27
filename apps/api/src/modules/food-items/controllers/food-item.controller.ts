@@ -9,7 +9,7 @@ export const foodItemController = {
     try {
       if (!req.user) throw AppError.unauthorized();
       const data = createFoodItemSchema.parse(req.body);
-      const item = await foodItemService.create(req.params['restaurantId']!, data);
+      const item = await foodItemService.create(req.params['restaurantId']!, req.user.id, data);
       res.status(201).json({ data: item });
     } catch (error) {
       next(error);
@@ -42,7 +42,7 @@ export const foodItemController = {
     try {
       if (!req.user) throw AppError.unauthorized();
       const data = updateFoodItemSchema.parse(req.body);
-      const item = await foodItemService.update(req.params['id']!, data);
+      const item = await foodItemService.update(req.params['id']!, req.user.id, req.params['restaurantId']!, data);
       res.status(200).json({ data: item });
     } catch (error) {
       next(error);
@@ -52,7 +52,7 @@ export const foodItemController = {
   async delete(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       if (!req.user) throw AppError.unauthorized();
-      await foodItemService.delete(req.params['id']!);
+      await foodItemService.delete(req.params['id']!, req.user.id, req.params['restaurantId']!);
       res.status(204).send();
     } catch (error) {
       next(error);
