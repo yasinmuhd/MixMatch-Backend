@@ -20,7 +20,7 @@ const addressSchema = new Schema(
 
 const restaurantSchema = new Schema(
   {
-    ownerId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    ownerId: { type: Schema.Types.ObjectId, required: true, ref: 'User', unique: true },
     name: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
     description: { type: String, trim: true, maxlength: 500, default: '' },
     address: { type: addressSchema, required: true },

@@ -4,6 +4,8 @@ import type { CreateRestaurantInput, UpdateRestaurantInput } from '../types/rest
 
 export const restaurantService = {
   async create(ownerId: string, data: CreateRestaurantInput) {
+    const existing = await restaurantRepository.findByOwnerId(ownerId);
+    if (existing) throw AppError.conflict('You already own a restaurant');
     return restaurantRepository.create(ownerId, data);
   },
 
@@ -32,9 +34,12 @@ export const restaurantService = {
     return restaurantRepository.updateById(id, data);
   },
 
-  async delete(id: string, _ownerId: string) {
+  async delete(id: string, ownerId: string) {
     const restaurant = await restaurantRepository.findById(id);
     if (!restaurant) throw AppError.notFound('Restaurant not found');
+    if (restaurant.ownerId.toString() !== ownerId) {
+      throw new AppError('You are not the owner of this restaurant', 403);
+    }
     return restaurantRepository.softDelete(id);
   },
 };
